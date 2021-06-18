@@ -1,0 +1,36 @@
+FROM ubuntu:20.04
+
+# Configure timezone
+ENV TZ=Europe/Kiev
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# Update and install git
+RUN apt-get update && apt-get install -qy git
+
+# Install a basic SSH server
+RUN  apt-get install -y openssh-server
+RUN  mkdir -p /var/run/sshd
+
+# Install JDK 8
+RUN  apt-get install -y openjdk-8-jdk
+
+# Install maven
+RUN  apt-get install -qy maven
+
+# Add user builder to the image
+RUN adduser --quiet builder
+
+# Set password for the builder user
+RUN echo 'builder:builder' | chpasswd
+RUN sed -ri 's/UsePAM yes/#UsePAM yes/g' /etc/ssh/sshd_config
+
+# Create .ssh dir copy authorized keys
+RUN mkdir /home/builder/.ssh
+COPY ./authorized_keys /home/builder/.ssh/authorized_keys
+RUN chown -R builder:builder /home/builder/.ssh/
+
+# Clean tmps
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]
