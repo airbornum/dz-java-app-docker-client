@@ -1,30 +1,39 @@
 pipeline {
     agent java-build-agent
     stages {
-        stage('test') {
+        stage('show versions') {
             steps {
                 script {
-                    echo "Testing the application..."
+                    sh "docker --version"
+                    sh "docker ps"
                 }
             }
         }
+        stage('checkout repo') {
+            steps {
+              git branch: "master", url: "https://github.com/airbornum/dz-java-app-docker-client.git"
+
+            }
+        }
+
+
         stage('build') {
             steps {
                 script {
                     echo "Building the application..."
+                    sh "cd ./dz-java-app-docker-client"
                     sh "docker build -t airbornum/java-app-docker:latest ."
                 }
             }
         }
-        stage('push') {
-            steps {
-                script {
-                    echo "Push the application..."
-                    sh "docker push airbornum/java-app-docker:latest"
-                }
-            }
+
+        stage('push app to dockerhub') {
+          docker.withRegistry('https://registry.hub.docker.com', 'dockerhub') {
+          app.push("airbornum/java-app-docker:latest")
         }
-        stage('deploy') {
+      }
+
+        stage('deploy app') {
             steps {
                 script {
                     echo "Run the application..."
