@@ -6,8 +6,6 @@ pipeline {
     dockerImage = ''
 }
 
-    agent none
-
     stages {
         stage ('Build app boxfuse') {
             agent {
