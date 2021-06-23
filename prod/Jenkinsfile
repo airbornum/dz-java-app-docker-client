@@ -5,6 +5,7 @@ pipeline {
     credentials = "dockerhub"
     dockerImage = ''
 }
+agent any
 
     stages {
         stage ('Build app boxfuse') {
