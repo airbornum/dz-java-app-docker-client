@@ -20,7 +20,7 @@ agent any
             stages {
                 stage ('Clone app repo') {
                     steps {
-                        git 'https://github.com/airbornum/dz-java-app-docker-client.git'
+                        git 'https://github.com/boxfuse/boxfuse-sample-java-war-hello.git'
                     }
                 }
                 stage ('Build app') {
