@@ -32,7 +32,7 @@ agent any
                 stage ('Clone buld Dockerfiles') {
                     steps {
                         dir ('build_app'){
-                            git branch: 'master', url: 'https://github.com/airbornum/dz-java-app-docker-client.git'
+                          sh 'git clone https://github.com/airbornum/dz-java-app-docker-client.git'
                         }
                     }
                 }
