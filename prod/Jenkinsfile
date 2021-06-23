@@ -1,0 +1,82 @@
+pipeline {
+  environment {
+//  imagename = "airbornum/docker-app-slave"
+    url = "https://registry.hub.docker.com"
+    credentials = "dockerhub"
+    dockerImage = ''
+}
+
+    agent none
+
+    stages {
+        stage ('Build app boxfuse') {
+            agent {
+                docker {
+                    image 'airbornum/alpine-build-agent:0.01'
+                    label 'alpine-build-agent'
+                    args '-v /var/run/docker.sock:/var/run/docker.sock'
+                    reuseNode true
+                }
+             }
+            stages {
+                stage ('Clone app repo') {
+                    steps {
+                        git 'https://github.com/airbornum/dz-java-app-docker-client.git'
+                    }
+                }
+                stage ('Build app') {
+                    steps {
+                        sh 'ls -la $pwd'
+                        sh 'mvn package'
+                    }
+                }
+                stage ('Clone buld Dockerfiles') {
+                    steps {
+                        dir ('build_app'){
+                            git branch: 'main', url: 'https://github.com/airbornum/dz-java-app-docker-client.git'
+                        }
+                    }
+                }
+                stage ('Build app image'){
+                    steps{
+                        sh 'docker build --build-arg java_app="./target/hello-1.0.war" --file "./build_app/prod/Dockerfile" --tag airbornum/java-app-docker:v1.3 .'
+                        script {
+                            dockerImage = docker.image ("airbornum/java-app-docker:v1.3")
+                        }
+                    }
+                }
+                stage ('Push image to repository') {
+                    steps {
+                        script{
+                            docker.withRegistry( 'url', 'credentials' ) {
+                                dockerImage.push()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        stage ('Deploy java app') {
+            agent { label 'env'
+            }
+            stages{
+                stage ('Pull image to prod') {
+                    steps {
+                        script{
+                            docker.withRegistry( 'url', 'credentials' ) {
+                                dockerImage = docker.image ('airbornum/java-app-docker:v1.3')
+                                dockerImage.pull()
+                            }
+                        }
+                    }
+                }
+          stage ('Launch java app'){
+                    steps{
+                        sh 'docker run -d -it -p 80:8080/tcp --name java-app airbornum/java-app-docker:v1.3'
+                    }
+                }
+            }
+        }
+    }
+}
