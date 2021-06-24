@@ -1,4 +1,3 @@
-MAINTAINER Yevhen Khadzhamov
 FROM alpine
 ARG java_app
 

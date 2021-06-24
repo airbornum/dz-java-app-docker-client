@@ -1,4 +1,3 @@
-MAINTAINER Yevhen Khadzhamov
 FROM alpine
 RUN apk add docker
 RUN apk add git
